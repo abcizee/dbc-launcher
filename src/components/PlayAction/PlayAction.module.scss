@@ -1,0 +1,109 @@
+@use '../../styles/variables' as *;
+
+.centerActionArea {
+  position: absolute;
+  inset: 0; // Растягиваем невидимый контейнер на весь экран (заменяет top/left/right/bottom: 0)
+  display: flex;
+  flex-direction: column;
+  align-items: center;     // Идеальное центрирование по горизонтали
+  justify-content: center; // Идеальное центрирование по вертикали
+  gap: 24px;
+  z-index: 10;
+  pointer-events: none;    // Пропускаем клики сквозь пустые зоны контейнера
+}
+
+.btnPlayWrapper {
+  pointer-events: auto; // Возвращаем кликабельность самой кнопке
+  
+  position: relative;
+  width: 320px;
+  height: 80px;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+
+  &:hover {
+    .btnPlay {
+      border-color: $accent-blood;
+      box-shadow: 0 0 40px rgba(158, 16, 16, 0.4);
+      transform: scale(1.05);
+
+      &::before {
+        width: 130%; 
+      }
+    }
+
+    .btnPlayText {
+      letter-spacing: 16px;
+      margin-right: -16px; 
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+  }
+}
+
+.btnPlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 12, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  clip-path: polygon(8% 0, 100% 0, 92% 100%, 0% 100%);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: -10%;
+    width: 0%;
+    background: linear-gradient(90deg, #6c0a0a, $accent-blood);
+    transform: skewX(-15deg);
+    transition: width 0.5s cubic-bezier(0.75, 0, 0.25, 1);
+    z-index: 1;
+  }
+}
+
+.btnPlayText {
+  position: relative;
+  z-index: 2;
+  font-family: $font-display;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 12px;
+  color: $text-primary;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+  transition: letter-spacing 0.4s;
+  margin-right: -12px;
+}
+
+.serverStatus {
+  pointer-events: auto; // Возвращаем кликабельность тексту
+  
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: $text-muted;
+  font-weight: 600;
+
+  .statusDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10B981;
+    box-shadow: 0 0 10px #10B981;
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+  100% { opacity: 1; transform: scale(1); }
+}

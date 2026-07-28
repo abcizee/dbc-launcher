@@ -1,0 +1,32 @@
+@use 'variables' as *;
+
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: $bg-deep;
+
+    background-image: url('../assets/images/bg.png');
+    background-size: cover;
+    background-position: center;
+    font-family: $font-main;
+    color: $text-secondary;
+    user-select: none;
+}
+
+// Делаем весь фон лаунчера перетаскиваемым (как шапку окна)
+body {
+  -webkit-app-region: drag;
+}
+
+// Отключаем перетаскивание для всех кликабельных элементов, иначе они не будут нажиматься!
+button, input, a, img, 
+.profileCard, .newsDropdown, .profilePill, .bellBtn, .settingsBtn {
+  -webkit-app-region: no-drag;
+}

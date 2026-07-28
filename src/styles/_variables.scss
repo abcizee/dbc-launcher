@@ -1,0 +1,18 @@
+@import url(https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&display=swap);
+
+$font-main: 'Inter', sans-serif;
+$font-display: 'Oswald', sans-serif;
+
+// Цвета
+$bg-deep: #08080a;
+$accent-blood: #9E1010;
+$accent-gold: #B49A5A;
+$text-primary: #fff;
+$text-secondary: #e5e7eb;
+$text-muted: #9CA3AF;
+
+
+// Эффекты
+$glass-bg: rgba(20, 20, 25, 0.4);
+$glass-bg-hover: rgba(40, 40, 45, 0.6);
+$glass-border: rgba(255, 255, 255, 0.05);

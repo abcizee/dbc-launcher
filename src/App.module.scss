@@ -1,0 +1,73 @@
+@use './styles/variables' as *;
+
+.launcherRoot {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(5, 5, 8, 0.95) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fogOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(8, 8, 10, 0.8) 0%, transparent 40%, rgba(8, 8, 10, 0.4) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.settingsBtnWrapper {
+  position: absolute;
+  bottom: 40px;
+  right: 50px;
+  z-index: 20;
+}
+
+.settingsBtn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: $glass-bg;
+  backdrop-filter: blur(8px);
+  border: 1px solid $glass-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: $glass-bg-hover;
+    color: $text-primary;
+    border-color: rgba(255, 255, 255, 0.15);
+
+    .gearIcon {
+      animation: spin 3s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.appVersion {
+  position: absolute;
+  bottom: 20px;
+  left: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-muted;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 10;
+  pointer-events: none;
+}
