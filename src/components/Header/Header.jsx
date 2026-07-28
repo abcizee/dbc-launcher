@@ -11,14 +11,14 @@ export const Header = ({ user, setUser, newsList, setNewsList }) => {
   const [isCreatingNews, setIsCreatingNews] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [newTitle, setNewTitle] = useState('');
-  const [newLink, setNewLink] = useState(''); // Ссылка для "Подробнее"
+  const [newLink, setNewLink] = useState('');
 
-  const [newsToDelete, setNewsToDelete] = useState(null); // Индекс новости для удаления
+  const [newsToDelete, setNewsToDelete] = useState(null);
 
   const handleAddNews = (e) => {
     e.preventDefault();
     if (!newTag || !newTitle) return;
-    const newArticle = { tag: newTag.toUpperCase(), title: newTitle, link: newLink || '#' };
+    const newArticle = { tag: newTag.toUpperCase(), title: newTitle, link: newLink || '' };
     setNewsList([newArticle, ...newsList]);
     setNewTag(''); setNewTitle(''); setNewLink(''); setIsCreatingNews(false);
   };
@@ -41,7 +41,6 @@ export const Header = ({ user, setUser, newsList, setNewsList }) => {
         initial={{ opacity: 0, y: -40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
       >
         <div className={styles.newsSection}>
-          {/* Открытие/закрытие только по этой кнопке */}
           <button className={styles.newsToggle} onClick={() => setIsNewsOpen(!isNewsOpen)}>
             <Menu size={20} /> НОВОСТИ
           </button>
@@ -54,7 +53,7 @@ export const Header = ({ user, setUser, newsList, setNewsList }) => {
               >
                 <div className={styles.newsHeader}>
                   <h3>ОБНОВЛЕНИЯ ТУМАНА</h3>
-                  <X size={20} className={styles.closeIcon} onClick={() => setIsNewsOpen(false)} />
+                  <X size={20} className={styles.closeIcon} onClick={() => setIsNewsOpen(false)} style={{ cursor: 'pointer' }} />
                 </div>
 
                 {user?.isAdmin && (
@@ -84,8 +83,8 @@ export const Header = ({ user, setUser, newsList, setNewsList }) => {
                          <div className={styles.deleteConfirm}>
                            <AlertTriangle size={16} color="#9e1010"/> Удалить новость?
                            <div>
-                             <button onClick={executeDeleteNews}>Да</button>
-                             <button onClick={() => setNewsToDelete(null)}>Нет</button>
+                             <button onClick={executeDeleteNews} style={{ cursor: 'pointer', background: '#9e1010', color: 'white', border: 'none', padding: '2px 8px', borderRadius: '4px', marginRight: '5px' }}>Да</button>
+                             <button onClick={() => setNewsToDelete(null)} style={{ cursor: 'pointer', background: 'transparent', color: 'white', border: '1px solid #555', padding: '2px 8px', borderRadius: '4px' }}>Нет</button>
                            </div>
                          </div>
                       ) : (
@@ -95,7 +94,20 @@ export const Header = ({ user, setUser, newsList, setNewsList }) => {
                             {user?.isAdmin && <Trash2 size={14} color="#9ca3af" style={{ cursor: 'pointer' }} onClick={() => confirmDeleteNews(i)} />}
                           </div>
                           <p className={styles.title}>{news.title}</p>
-                          <a href={news.link || '#'} target="_blank" rel="noreferrer" className={styles.readMore}>ПОДРОБНЕЕ <ChevronRight size={12} /></a>
+                          
+                          {/* ИСПРАВЛЕНИЕ: Блокировка открытия пустого окна */}
+                          <a 
+                            href={news.link || '#'} 
+                            target={news.link && news.link !== '#' ? "_blank" : "_self"} 
+                            rel="noreferrer" 
+                            className={styles.readMore}
+                            onClick={(e) => {
+                              if (!news.link || news.link === '#') e.preventDefault(); // Запрещаем переход, если ссылки нет
+                            }}
+                            style={{ opacity: !news.link || news.link === '#' ? 0.5 : 1, cursor: !news.link || news.link === '#' ? 'default' : 'pointer' }}
+                          >
+                            ПОДРОБНЕЕ <ChevronRight size={12} />
+                          </a>
                         </>
                       )}
                     </div>
@@ -112,7 +124,12 @@ export const Header = ({ user, setUser, newsList, setNewsList }) => {
         </div>
 
         <div className={styles.profileSection}>
-          <div className={styles.bellBtn} title="Уведомления"><Bell size={20} /><div className={styles.dot} /></div>
+          {/* ИСПРАВЛЕНИЕ: Колокольчик теперь тоже открывает новости */}
+          <div className={styles.bellBtn} title="Уведомления" onClick={() => setIsNewsOpen(!isNewsOpen)} style={{ cursor: 'pointer' }}>
+            <Bell size={20} />
+            <div className={styles.dot} />
+          </div>
+          
           <div className={styles.profilePill} onClick={() => setIsProfileOpen(true)}>
             <img src={user ? `https://minotar.net/helm/${user.username}/100.png` : "https://minotar.net/helm/steve/100.png"} alt="Avatar" className={styles.avatar} />
             <div className={styles.details}>
