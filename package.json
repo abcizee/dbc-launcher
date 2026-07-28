@@ -1,7 +1,8 @@
 {
   "name": "dead-by-craft",
+  "productName": "DBC Launcher",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.2",
   "main": "electron/main.js",
   "type": "module",
   "scripts": {
@@ -13,7 +14,7 @@
   },
   "build": {
     "appId": "com.abcizee.deadbycraft",
-    "productName": "Dead by Craft",
+    "productName": "DBC Launcher",
     "directories": {
       "output": "dist-electron"
     },

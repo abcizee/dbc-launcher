@@ -1,10 +1,15 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import { Auth } from 'msmc'
 import pg from 'pg'
 import bcrypt from 'bcryptjs'
 import dotenv from 'dotenv';
-import { autoUpdater } from 'electron-updater';
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -29,6 +34,7 @@ function createWindow() {
   if (process.env.VITE_DEV_SERVER_URL) { win.loadURL(process.env.VITE_DEV_SERVER_URL) } 
   else { win.loadFile(path.join(__dirname, '../dist/index.html')) }
 }
+
 
 // ----------------------------------------------------
 // 1. РЕГИСТРАЦИЯ ЧЕРЕЗ POSTGRESQL
