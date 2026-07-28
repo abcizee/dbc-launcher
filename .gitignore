@@ -12,7 +12,6 @@ dist
 dist-electron
 .env
 .DS_Store
-src/config.js
 dist-ssr
 *.local
 
