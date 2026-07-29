@@ -8,7 +8,10 @@ import dotenv from 'dotenv';
 import pkg from 'electron-updater';
 import { Client } from 'minecraft-launcher-core'; // <-- Ядро лаунчера
 import fs from 'fs'; // Для работы с файлами
-import http from 'http'; // Для локального скачивания модов
+import https from 'https';
+
+const MODS_JSON_URL = 'https://raw.githubusercontent.com/abcizee/dbc-modpack/refs/heads/main/mods.json';
+const MODS_BASE_URL = 'https://raw.githubusercontent.com/abcizee/dbc-modpack/refs/heads/main/mods';
 
 const { autoUpdater } = pkg;
 const __filename = fileURLToPath(import.meta.url);
@@ -128,10 +131,28 @@ ipcMain.handle('ms-login', async () => {
 const launcher = new Client();
 
 // Вспомогательная функция для скачивания файла (локально)
-function downloadFile(url, dest) {
+function downloadFile(url, dest, onProgress) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    http.get(url, (response) => {
+    https.get(url, (response) => {
+      // Обработка редиректов (на всякий случай)
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        return downloadFile(response.headers.location, dest, onProgress).then(resolve).catch(reject);
+      }
+      if (response.statusCode !== 200) {
+        return reject(new Error(`Ошибка HTTP: ${response.statusCode}`));
+      }
+
+      const totalBytes = parseInt(response.headers['content-length'], 10) || 0;
+      let downloadedBytes = 0;
+
+      response.on('data', (chunk) => {
+        downloadedBytes += chunk.length;
+        if (onProgress && totalBytes > 0) {
+          onProgress(downloadedBytes, totalBytes);
+        }
+      });
+
       response.pipe(file);
       file.on('finish', () => { file.close(); resolve(); });
     }).on('error', (err) => {
@@ -148,35 +169,41 @@ async function syncMods(modsDir, event) {
   }
 
   try {
-    // 1. Запрашиваем список актуальных модов с твоего локального сервера
-    // Для этого на локальном ПК можно поднять простую папку через python -m http.server 8080
-    event.sender.send('launch-status', 'Проверка обновлений модов...');
+    event.sender.send('launch-status', { text: 'Проверка списка модов (GitHub)...', percent: 0 });
     
-    // ВРЕМЕННАЯ ЗАГЛУШКА: Чтобы код не падал, пока у тебя нет веб-сервера с файлом mods.json.
-    // Когда сервер будет готов, раскомментируй реальный фетч списка.
-    
-    /*
-    const response = await fetch('http://127.0.0.1:8080/mods.json');
-    const requiredMods = await response.json(); // Ожидаем массив: ["fabric-api.jar", "dbc-mod.jar"]
+    // Получаем mods.json
+    const response = await fetch(MODS_JSON_URL);
+    if (!response.ok) throw new Error('Не удалось получить mods.json');
+    const requiredMods = await response.json(); 
     
     for (const modName of requiredMods) {
       const modPath = path.join(modsDir, modName);
+      
       if (!fs.existsSync(modPath)) {
-        event.sender.send('launch-status', `Скачивание: ${modName}...`);
-        await downloadFile(`http://127.0.0.1:8080/mods/${modName}`, modPath);
+        const modUrl = `${MODS_BASE_URL}/${modName}`;
+        
+        await downloadFile(modUrl, modPath, (down, total) => {
+          const mbDown = (down / 1024 / 1024).toFixed(1);
+          const mbTotal = (total / 1024 / 1024).toFixed(1);
+          const percent = Math.round((down / total) * 100);
+          
+          event.sender.send('launch-status', { 
+            text: `Скачивание ${modName}: ${mbDown}MB / ${mbTotal}MB`, 
+            percent: percent 
+          });
+        });
       }
     }
-    */
     
-    event.sender.send('launch-status', 'Моды синхронизированы!');
+    event.sender.send('launch-status', { text: 'Все моды актуальны!', percent: 100 });
   } catch (err) {
-    console.error("Ошибка синхронизации модов:", err);
-    event.sender.send('launch-status', 'Ошибка синхронизации модов!');
+    console.error("Ошибка синхронизации:", err);
+    event.sender.send('launch-status', { text: 'Ошибка скачивания модов!' });
+    throw err; 
   }
 }
 
 ipcMain.on('launch-game', async (event, authData) => {
-  // Директория твоего клиента в системе пользователя (в %AppData%)
   const rootPath = path.join(app.getPath('userData'), '.dbc-client');
   const modsPath = path.join(rootPath, 'mods');
 
@@ -191,32 +218,29 @@ ipcMain.on('launch-game', async (event, authData) => {
     },
     root: rootPath,
     version: {
-      number: "1.20.1",
+      number: "1.21.1",
       type: "release",
-      custom: "fabric-loader-0.14.22-1.20.1" // Точное имя папки установленного фабрика
+      // Базовая стабильная версия Fabric для 1.21.1:
+      custom: "fabric-loader-0.16.5-1.21.1" 
     },
     memory: { max: "4G", min: "2G" },
     server: { host: "127.0.0.1", port: "25565" }
   };
 
   launcher.on('progress', (e) => {
-    event.sender.send('launch-status', `Загрузка: ${e.task} (${e.total} файлов)`);
+    event.sender.send('launch-status', { text: `Загрузка ядра: ${e.task} (${e.total})`, percent: 0 });
   });
 
-  launcher.on('data', (e) => console.log(e));
-
   try {
-    // 1. Синхронизируем наши кастомные моды
     await syncMods(modsPath, event);
 
-    // 2. Запускаем ядро Minecraft (скачает ванильные файлы и запустит Java)
-    event.sender.send('launch-status', 'Инициализация ядра Minecraft...');
+    event.sender.send('launch-status', { text: 'Запуск Minecraft...', percent: 100 });
     await launcher.launch(opts);
     
-    event.sender.send('launch-status', 'Игра запущена!');
+    event.sender.send('launch-status', { text: 'Игра запущена!', percent: 100 });
   } catch (error) {
-    console.error(error);
-    event.sender.send('launch-status', 'Ошибка запуска! Смотри консоль.');
+    console.error("Launch Error:", error);
+    event.sender.send('launch-status', { text: 'Ошибка запуска! (Проверьте консоль)' });
   }
 });
 

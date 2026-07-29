@@ -2,18 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styles from './PlayAction.module.scss';
 
-// Подключаем IPC для общения с Electron
 const { ipcRenderer } = window.require('electron');
 
 export const PlayAction = ({ user }) => {
   const [status, setStatus] = useState('');
+  const [progress, setProgress] = useState(0); // Процент от 0 до 100
   const [isLaunching, setIsLaunching] = useState(false);
 
   useEffect(() => {
-    // Слушаем статусы скачивания от Electron
-    const handleStatus = (e, msg) => setStatus(msg);
-    ipcRenderer.on('launch-status', handleStatus);
+    const handleStatus = (e, data) => {
+      // Поддерживаем и простой текст, и объекты с процентами
+      if (typeof data === 'string') {
+        setStatus(data);
+        setProgress(0);
+      } else {
+        setStatus(data.text);
+        if (data.percent !== undefined) setProgress(data.percent);
+      }
+      
+      // Если прилетела ошибка — отжимаем кнопку обратно
+      if ((typeof data === 'string' && data.includes('Ошибка')) || 
+          (data.text && data.text.includes('Ошибка'))) {
+        setIsLaunching(false);
+      }
+    };
     
+    ipcRenderer.on('launch-status', handleStatus);
     return () => ipcRenderer.removeListener('launch-status', handleStatus);
   }, []);
 
@@ -25,8 +39,8 @@ export const PlayAction = ({ user }) => {
 
     setIsLaunching(true);
     setStatus('Инициализация...');
+    setProgress(0);
 
-    // Отправляем команду на запуск вместе с данными игрока
     ipcRenderer.send('launch-game', {
       username: user.username,
       uuid: user.uuid,
@@ -55,7 +69,14 @@ export const PlayAction = ({ user }) => {
       </button>
       
       <div className={styles.serverStatus}>
-        <span className={styles.statusDot} />
+        {/* Рендерим прогресс-бар, если загрузка в процессе */}
+        {progress > 0 && progress < 100 && (
+          <div style={{ width: '100%', background: 'rgba(255,255,255,0.1)', height: '4px', borderRadius: '2px', margin: '8px 0', overflow: 'hidden' }}>
+            <div style={{ width: `${progress}%`, background: '#fff', height: '100%', borderRadius: '2px', transition: 'width 0.2s' }} />
+          </div>
+        )}
+        
+        <span className={styles.statusDot} style={{ background: isLaunching ? '#ffaa00' : '#00ff88' }} />
         {status ? status : 'СЕРВЕРА АКТИВНЫ • 1,423 ОНЛАЙН'}
       </div>
     </motion.div>
