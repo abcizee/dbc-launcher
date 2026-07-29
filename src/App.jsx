@@ -5,7 +5,7 @@ import { Header } from './components/Header/Header';
 import { PlayAction } from './components/PlayAction/PlayAction';
 import { SettingsModal } from './components/SettingsModal/SettingsModal';
 import { WindowControls } from './components/WindowControls/WindowControls';
-import { Updater } from './components/Updater/Updater'; // <-- 1. ИМПОРТИРУЕМ UPDATER
+import { Updater } from './components/Updater/Updater'; 
 import { APP_CONFIG } from './config.js';
 
 import './styles/global.scss';
@@ -16,9 +16,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const [newsList, setNewsList] = useState([
-    { tag: "PATCH 1.0.4", title: "Новый маньяк: 'Шахтёр' уже в тумане." },
-    { tag: "HOTFIX", title: "Исправлен баг с текстурами генераторов." },
-    { tag: "EVENT", title: "Кровавая жатва начнется в эти выходные!" }
+    { id: 1, title: "Добро пожаловать в наш лаунчер!", content: "Мы рады видеть вас здесь. Наслаждайтесь игрой!" }
   ]);
 
   return (
@@ -31,7 +29,7 @@ export default function App() {
       <div className={styles.fogOverlay} />
 
       {/* ============================================================== */}
-      {/* 2. ДОБАВЛЯЕМ UPDATER СЮДА (ОН ПЕРЕКРОЕТ ВСЁ, ЕСЛИ ЕСТЬ ОБНОВЛЕНИЕ) */}
+      {/* UPDATER (ОН ПЕРЕКРОЕТ ВСЁ, ЕСЛИ ЕСТЬ ОБНОВЛЕНИЕ) */}
       <Updater />
       {/* ============================================================== */}
 
@@ -44,7 +42,8 @@ export default function App() {
       />
 
       {/* Центр: Кнопка ИГРАТЬ */}
-      <PlayAction />
+      {/* ПЕРЕДАЕМ USER СЮДА */}
+      <PlayAction user={user} />
 
       {/* Нижняя правая кнопка настроек */}
       <motion.div 
